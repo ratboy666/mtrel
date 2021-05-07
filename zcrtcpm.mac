@@ -1,0 +1,37 @@
+	.z80
+	.request LIBC
+
+	cseg
+
+	global	start
+	extrn	_main, _exit, __argc_, startup
+	global	$MEMRY
+
+start:	ld	hl,(6)		;base address of fdos
+	ld	sp,hl		;stack grows downwards
+	ld	hl,nularg	;""
+	push	hl
+	ld	hl,80h		;argument buffer
+	ld	c,(hl)
+	inc	hl
+	ld	b,0
+	add	hl,bc
+	ld	(hl),0		;zero terminate it
+	ld	hl,81h
+	push	hl
+	call	startup		;startup(cmdline, "")
+	pop	bc		;unjunk stack
+	pop	bc
+	push	hl		;argv
+	ld	hl,(__argc_)
+	push	hl
+	call	_main		;rc = main(argc, argv)
+	push	hl
+	call	_exit		;exit(rc);
+	jp	0
+
+	dseg
+$MEMRY:	ds	2
+nularg:	defb	0
+	end	start
+
